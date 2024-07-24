@@ -78,8 +78,7 @@ class GradeBook:
             print("............................................................")
             print("                Welcome to Our Student Transcript              ")
             print("............................................................")
-            print(f"Student name: {'.' * (25 - len('Student name: ' + student.names))} {student.names}")
-
+            print(f"Student name: {'.' * (25 - len('Student name: '))} {student.names}")
             print(f"Student email: {'.' * (25 - len('Student email: '))} {student.email}")
             print(f"Gender: {'.' * (25 - len('Gender: '))} {student.gender}")
             print("............................................................")
@@ -111,6 +110,10 @@ class GradeBook:
         else:
             return 'F'
 
+    def save_data(self, filename):
+        with open(filename, 'wb') as f:
+            pickle.dump(self, f)
+
 def main():
     print("Welcome to Olivier's Grading App!")
     gradebook = GradeBook()
@@ -126,6 +129,7 @@ def main():
         print("5. Search by Grade")
         print("6. Generate Transcript")
         print("7. Exit")
+        print("8. Save Data")
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
         choice = input("Enter your choice: ")
@@ -166,6 +170,10 @@ def main():
         elif choice == '7':
             print("Thank you for using our App.")
             break
+        elif choice == '8':
+            filename = input("Enter filename to save data (e.g., 'gradebook_data.pkl'): ")
+            gradebook.save_data(filename)
+            print(f"Data saved successfully to '{filename}'.")
         else:
             print("Invalid choice. Please try again.")
 
