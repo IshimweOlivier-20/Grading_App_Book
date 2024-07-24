@@ -78,7 +78,7 @@ class GradeBook:
             print("............................................................")
             print("                Welcome to Our Student Transcript              ")
             print("............................................................")
-            print(f"Student name: {'.' * (25 - len('Student name: ') - len(student.names))} {student.names}")
+            print(f"Student name: {'.' * (25 - len('Student name: ' + student.names))} {student.names}")
 
             print(f"Student email: {'.' * (25 - len('Student email: '))} {student.email}")
             print(f"Gender: {'.' * (25 - len('Gender: '))} {student.gender}")
