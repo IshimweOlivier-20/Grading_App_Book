@@ -1,4 +1,4 @@
-import pickle
+import json
 
 class Student:
     def __init__(self, email, names, gender):
@@ -8,6 +8,24 @@ class Student:
         self.courses_registered = []
         self.total_marks = 0.0
         self.GPA = 0.0
+
+    def to_dict(self):
+        return {
+            'email': self.email,
+            'names': self.names,
+            'gender': self.gender,
+            'courses_registered': [{'name': course.name, 'trimester': course.trimester, 'credits': course.credits, 'marks': marks} for course, marks in self.courses_registered],
+            'total_marks': self.total_marks,
+            'GPA': self.GPA
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        student = cls(data['email'], data['names'], data['gender'])
+        student.courses_registered = [(Course(c['name'], c['trimester'], c['credits']), c['marks']) for c in data['courses_registered']]
+        student.total_marks = data['total_marks']
+        student.GPA = data['GPA']
+        return student
 
     def calculate_marks_and_grade(self):
         if not self.courses_registered:
@@ -20,7 +38,6 @@ class Student:
             self.GPA = self.calculate_gpa_from_marks(self.total_marks)
 
     def calculate_gpa_from_marks(self, marks):
-        # Custom GPA calculation based on marks
         if marks >= 85:
             return 4.0
         elif marks >= 75:
@@ -45,6 +62,17 @@ class Course:
         self.name = name
         self.trimester = trimester
         self.credits = credits
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'trimester': self.trimester,
+            'credits': self.credits
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(data['name'], data['trimester'], data['credits'])
 
 class GradeBook:
     def __init__(self):
@@ -76,7 +104,7 @@ class GradeBook:
         student = next((s for s in self.student_list if s.email == student_email), None)
         if student:
             print("............................................................")
-            print("                Welcome to Our Student Transcript              ")
+            print("                        Student's Transcript                 ")
             print("............................................................")
             print(f"Student name: {'.' * (25 - len('Student name: '))} {student.names}")
             print(f"Student email: {'.' * (25 - len('Student email: '))} {student.email}")
@@ -96,7 +124,6 @@ class GradeBook:
             print("Student not found")
 
     def grade_from_marks(self, marks):
-        # Custom grading scheme based on marks
         if marks >= 85:
             return 'A'
         elif marks >= 75:
@@ -110,17 +137,44 @@ class GradeBook:
         else:
             return 'F'
 
-    def save_data(self, filename):
-        with open(filename, 'wb') as f:
-            pickle.dump(self, f)
+    def save_data(self, filename='gradebook_data.json'):
+        data = {
+            'students': [s.to_dict() for s in self.student_list],
+            'courses': [c.to_dict() for c in self.course_list]
+        }
+        with open(filename, 'w') as f:
+            json.dump(data, f, indent=4)
+        print(f"Data saved successfully to '{filename}'.")
+
+    def load_data(self, filename='gradebook_data.json'):
+        try:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+                self.student_list = [Student.from_dict(s) for s in data['students']]
+                self.course_list = [Course.from_dict(c) for c in data['courses']]
+            print(f"Data loaded successfully from '{filename}'.")
+        except FileNotFoundError:
+            print(f"No data file found at '{filename}'.")
+
+    def show_all_students(self):
+        sorted_students = sorted(self.student_list, key=lambda s: s.names)
+        print("All Students with Registrations:")
+        for student in sorted_students:
+            print(f"Student Name: {student.names}")
+            print(f"Email: {student.email}")
+            print("Courses Registered:")
+            for course, marks in student.courses_registered:
+                print(f"- Course: {course.name}, Marks: {marks:.2f}, GPA: {student.GPA:.2f}")
+            print("............................................................")
 
 def main():
-    print("Welcome to Olivier's Grading App!")
+    print("Welcome to ALU Grading App!")
     gradebook = GradeBook()
+    gradebook.load_data()
 
     while True:
         print("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        print("    Welcome to Olivier's Grading App    ")
+        print("        Welcome to ALU Grading App        ")
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         print("1. Add Student")
         print("2. Add Course")
@@ -128,8 +182,9 @@ def main():
         print("4. Calculate Ranking")
         print("5. Search by Grade")
         print("6. Generate Transcript")
-        print("7. Exit")
+        print("7. Show All Students")
         print("8. Save Data")
+        print("9. Exit")
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
         choice = input("Enter your choice: ")
@@ -168,12 +223,13 @@ def main():
             student_email = input("Enter student's email: ")
             gradebook.generate_transcript(student_email)
         elif choice == '7':
+            gradebook.show_all_students()
+        elif choice == '8':
+            gradebook.save_data()
+        elif choice == '9':
+            gradebook.save_data()
             print("Thank you for using our App.")
             break
-        elif choice == '8':
-            filename = input("Enter filename to save data (e.g., 'gradebook_data.pkl'): ")
-            gradebook.save_data(filename)
-            print(f"Data saved successfully to '{filename}'.")
         else:
             print("Invalid choice. Please try again.")
 
